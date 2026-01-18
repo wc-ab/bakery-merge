@@ -487,8 +487,6 @@ function resetGame() {
 }
 
 // --- Real Multiplayer Logic (PeerJS) ---
-let peer = null;
-let conn = null;
 
 function initMultiplayer() {
   // Use nickname as part of Peer ID for easier identification
