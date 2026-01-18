@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bakery Merge Tycoon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+
+<body>
+  <div id="nickname-overlay" class="modal active" style="z-index: 200;">
+    <div class="modal-content">
+      <h2>👋 환영합니다!</h2>
+      <p>먼저 사용할 닉네임을 입력해주세요.</p>
+      <input type="text" id="nickname-input" placeholder="닉네임 입력..."
+        style="width: 100%; padding: 12px; margin: 20px 0; border-radius: 8px; border: 2px solid var(--cell-bg);">
+      <button id="save-nickname" style="width: 100%; background: var(--accent-color); color: white;">시작하기</button>
+    </div>
+  </div>
+
+  <div id="app">
+    <header>
+      <div class="title-container">
+        <h1>Bakery Merge</h1>
+      </div>
+      <div class="stats-container">
+        <div id="trash-can" class="trash-icon" style="cursor:pointer; font-size:1.5rem; margin-right:10px;">🗑️</div>
+        <span class="coin-icon">💰</span>
+        <span id="coin-count">0</span>
+      </div>
+    </header>
+
+    <main id="game-board">
+      <!-- Grid cells will be generated here -->
+    </main>
+
+    <footer>
+      <div class="button-group">
+        <button id="spawn-btn">🍞 빵 굽기</button>
+        <button id="expand-btn">➕ 확장</button>
+        <button id="recipe-btn">🍓 토핑 상점</button>
+        <button id="book-btn">📖 레시피 북</button>
+        <button id="multi-btn" style="background: #9c27b0; color: white;">👥 친구와 함께</button>
+        <button id="quest-btn" style="background: #ffc107; color: white;">🎯 퀘스트</button>
+        <button id="decor-btn" style="background: #4caf50; color: white;">🎨 배경 꾸미기</button>
+        <button id="reset-btn" style="background: #ff5252; color: white;">⚙️ 초기화</button>
+      </div>
+      <div class="credits">최리에-제작</div>
+    </footer>
+  </div>
+
+  <!-- Recipe Modal -->
+  <div id="recipe-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🍓 토핑 상점</h2>
+        <span class="close-btn">&times;</span>
+      </div>
+      <div class="recipe-list" id="recipe-list">
+        <!-- Recipes will be listed here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Recipe Book Modal -->
+  <div id="book-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📖 레시피 북</h2>
+        <span class="close-btn">&times;</span>
+      </div>
+      <div class="recipe-list" id="book-list">
+        <!-- Descriptions will be listed here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Multiplayer Lobby Modal -->
+  <div id="multi-modal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2>👥 멀티플레이 로비</h2>
+        <span class="close-btn">&times;</span>
+      </div>
+      <div id="lobby-view">
+        <div style="margin-bottom: 20px;">
+          <input type="text" id="room-name-input" placeholder="방 이름 입력..."
+            style="padding: 8px; border-radius: 8px; border: 1px solid #ccc; width: 70%;">
+          <button id="create-room-btn" style="width: 25%; padding: 8px; font-size: 0.9rem;">방 만들기</button>
+        </div>
+        <h3>공개된 방 목록</h3>
+        <div id="room-list" class="recipe-list" style="margin-top: 10px;">
+          <!-- Mock Rooms -->
+        </div>
+      </div>
+
+      <div id="room-view" style="display: none;">
+        <h3 id="current-room-title">방 제목</h3>
+        <div id="chat-box"
+          style="height: 200px; background: #f0f0f0; border-radius: 12px; margin: 10px 0; padding: 10px; overflow-y: auto; font-size: 0.9rem;">
+          <div style="color: #888;">채팅방에 입장했습니다.</div>
+        </div>
+        <div style="display: flex; gap: 5px;">
+          <input type="text" id="chat-input" placeholder="메시지 입력..."
+            style="flex: 1; padding: 8px; border-radius: 8px; border: 1px solid #ccc;">
+          <button id="send-chat" style="padding: 8px;">전송</button>
+        </div>
+        <hr style="margin: 15px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <button id="battle-btn" style="background: #f44336; color: white; flex: 1; margin-right: 5px;">⚔️ 배틀 모드
+            시작</button>
+          <button id="exit-room" style="flex: 0.5;">나가기</button>
+        </div>
+        <div id="battle-status" style="margin-top: 10px; font-weight: bold; text-align: center; color: #f44336;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quest Modal -->
+  <div id="quest-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🎯 일일 퀘스트</h2>
+        <span class="close-btn">&times;</span>
+      </div>
+      <div id="quest-list" class="recipe-list">
+        <!-- Quests will be listed here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Decor Modal -->
+  <div id="decor-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🎨 배경 꾸미기</h2>
+        <span class="close-btn">&times;</span>
+      </div>
+      <div id="decor-list" class="recipe-list">
+        <!-- Backgrounds will be listed here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+
+</html>
