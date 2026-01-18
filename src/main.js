@@ -92,6 +92,13 @@ function init() {
   applyBackground(state.currentBackground);
 
   createBoard();
+
+  // Spawn starting item if board is empty
+  const isEmpty = state.grid.every(item => item === null);
+  if (isEmpty) {
+    spawnItem();
+  }
+
   updateCoins();
   setupEventListeners();
   updateExpandBtn();
