@@ -64,7 +64,6 @@ const recipeModal = document.getElementById('recipe-modal');
 const bookModal = document.getElementById('book-modal');
 const recipeList = document.getElementById('recipe-list');
 const bookList = document.getElementById('book-list');
-const resetBtn = document.getElementById('reset-btn');
 const closeBtns = document.querySelectorAll('.close-btn');
 
 let peer = null;
@@ -511,8 +510,11 @@ function saveGame() {
 }
 
 function resetGame() {
-  if (confirm('모든 진행 상황을 초기화하시겠습니까? 구매한 배경과 코인이 모두 사라집니다.')) {
-    localStorage.removeItem('bakery-merge-save');
+  console.log('🥖 Bakery Merge: Resetting game...');
+  const check = confirm('정말로 모든 진행 상황을 초기화하시겠습니까?\n닉네임, 코인, 배치된 빵들이 모두 삭제됩니다.');
+  if (check) {
+    localStorage.clear();
+    console.log('🥖 Bakery Merge: LocalStorage cleared. Reloading...');
     location.reload();
   }
 }
