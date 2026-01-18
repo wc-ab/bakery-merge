@@ -71,6 +71,7 @@ let peer = null;
 let conn = null;
 
 function init() {
+  console.log('🥖 Bakery Merge: Initializing...');
   // Load from local storage
   const saved = localStorage.getItem('bakery-merge-save');
   if (saved) {
@@ -94,6 +95,7 @@ function init() {
   updateCoins();
   setupEventListeners();
   updateExpandBtn();
+  console.log('🥖 Bakery Merge: Game Ready!');
 }
 
 function createBoard() {
@@ -680,11 +682,16 @@ function exitRoom() {
 function setupEventListeners() {
   // Nickname
   document.getElementById('save-nickname').addEventListener('click', () => {
+    console.log('🥖 Bakery Merge: Start button clicked');
     const input = document.getElementById('nickname-input');
-    if (input.value.trim()) {
-      state.nickname = input.value;
+    const nickname = input.value.trim();
+    if (nickname) {
+      state.nickname = nickname;
       document.getElementById('nickname-overlay').style.display = 'none';
       saveGame();
+      console.log('🥖 Bakery Merge: Nickname saved:', nickname);
+    } else {
+      alert('닉네임을 입력해주세요!');
     }
   });
 
