@@ -70,39 +70,61 @@ const closeBtns = document.querySelectorAll('.close-btn');
 let peer = null;
 let conn = null;
 
+// Global Error Reporting
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+  const errorMsg = `🥖 Bakery Merge Error: ${msg} at ${lineNo}:${columnNo}`;
+  console.error(errorMsg);
+  // Show a small error hint on screen if development
+  if (location.hostname === 'localhost') {
+    const hint = document.createElement('div');
+    hint.style.cssText = 'position:fixed;bottom:0;left:0;background:red;color:white;z-index:9999;padding:5px;font-size:10px;';
+    hint.innerText = errorMsg;
+    document.body.appendChild(hint);
+  }
+  return false;
+};
+
 function init() {
-  console.log('🥖 Bakery Merge: Initializing...');
-  // Load from local storage
-  const saved = localStorage.getItem('bakery-merge-save');
-  if (saved) {
-    const data = JSON.parse(saved);
-    state.coins = data.coins || 0;
-    state.gridSize = data.gridSize || 16;
-    state.grid = data.grid || Array(state.gridSize).fill(null);
-    state.nickname = data.nickname || '';
-    state.quests = data.quests || state.quests;
-    state.backgrounds = data.backgrounds || state.backgrounds;
-    state.currentBackground = data.currentBackground || 'default';
+  try {
+    console.log('🥖 Bakery Merge: Initializing...');
+    // Load from local storage
+    const saved = localStorage.getItem('bakery-merge-save');
+    if (saved) {
+      const data = JSON.parse(saved);
+      state.coins = data.coins || 0;
+      state.gridSize = data.gridSize || 16;
+      state.grid = data.grid || Array(state.gridSize).fill(null);
+      state.nickname = data.nickname || '';
+      state.quests = data.quests || state.quests;
+      state.backgrounds = data.backgrounds || state.backgrounds;
+      state.currentBackground = data.currentBackground || 'default';
+    }
+
+    if (state.nickname) {
+      document.getElementById('nickname-overlay').style.display = 'none';
+      document.getElementById('nickname-overlay').classList.remove('active');
+    }
+
+    applyBackground(state.currentBackground);
+
+    createBoard();
+    updateCoins();
+
+    // Setup listeners BEFORE potential spawn failure
+    setupEventListeners();
+    updateExpandBtn();
+
+    // Spawn starting item if board is empty
+    const isEmpty = state.grid.every(item => item === null);
+    if (isEmpty) {
+      console.log('🥖 Bakery Merge: Board empty, spawning starter...');
+      spawnItem();
+    }
+
+    console.log('🥖 Bakery Merge: Game Ready!');
+  } catch (err) {
+    console.error('🥖 Bakery Merge: Init Failed!', err);
   }
-
-  if (state.nickname) {
-    document.getElementById('nickname-overlay').style.display = 'none';
-  }
-
-  applyBackground(state.currentBackground);
-
-  createBoard();
-
-  // Spawn starting item if board is empty
-  const isEmpty = state.grid.every(item => item === null);
-  if (isEmpty) {
-    spawnItem();
-  }
-
-  updateCoins();
-  setupEventListeners();
-  updateExpandBtn();
-  console.log('🥖 Bakery Merge: Game Ready!');
 }
 
 function createBoard() {
@@ -550,6 +572,25 @@ function openQuests() {
   questModal.classList.add('active');
 }
 
+function updateQuestProgress(id, amount) {
+  const quest = state.quests.find(q => q.id === id);
+  if (quest && !quest.completed) {
+    quest.current += amount;
+    if (quest.current >= quest.target) {
+      quest.current = quest.target;
+      quest.completed = true;
+      addCoins(quest.reward);
+      alert(`🌟 퀘스트 완료! ${quest.text}\n보상: ${quest.reward.toLocaleString()} 💰`);
+    }
+    saveGame();
+    // Refresh quest modal if it's open
+    const questModal = document.getElementById('quest-modal');
+    if (questModal && questModal.classList.contains('active')) {
+      openQuests();
+    }
+  }
+}
+
 function openDecor() {
   const decorList = document.getElementById('decor-list');
   const decorModal = document.getElementById('decor-modal');
@@ -687,37 +728,65 @@ function exitRoom() {
 }
 
 function setupEventListeners() {
+  console.log('🥖 Bakery Merge: Setting up event listeners...');
+
   // Nickname
-  document.getElementById('save-nickname').addEventListener('click', () => {
-    console.log('🥖 Bakery Merge: Start button clicked');
-    const input = document.getElementById('nickname-input');
-    const nickname = input.value.trim();
-    if (nickname) {
-      state.nickname = nickname;
-      document.getElementById('nickname-overlay').style.display = 'none';
-      saveGame();
-      console.log('🥖 Bakery Merge: Nickname saved:', nickname);
-    } else {
-      alert('닉네임을 입력해주세요!');
-    }
-  });
+  const saveNicknameBtn = document.getElementById('save-nickname');
+  if (saveNicknameBtn) {
+    saveNicknameBtn.addEventListener('click', () => {
+      console.log('🥖 Bakery Merge: Start button clicked');
+      const input = document.getElementById('nickname-input');
+      const nickname = input.value.trim();
+      if (nickname) {
+        state.nickname = nickname;
+        document.getElementById('nickname-overlay').style.display = 'none';
+        document.getElementById('nickname-overlay').classList.remove('active');
+        saveGame();
+        console.log('🥖 Bakery Merge: Nickname saved:', nickname);
+      } else {
+        alert('닉네임을 입력해주세요!');
+      }
+    });
+  }
 
-  spawnBtn.addEventListener('click', spawnItem);
-  recipeBtn.addEventListener('click', openRecipes);
-  bookBtn.addEventListener('click', openBook);
-  document.getElementById('expand-btn').addEventListener('click', expandBoard);
-  document.getElementById('multi-btn').addEventListener('click', openMultiLobby);
-  document.getElementById('quest-btn').addEventListener('click', openQuests);
-  document.getElementById('decor-btn').addEventListener('click', openDecor);
-  document.getElementById('reset-btn').addEventListener('click', resetGame);
-  document.getElementById('send-chat').addEventListener('click', sendChat);
-  document.getElementById('exit-room').addEventListener('click', exitRoom);
-  document.getElementById('battle-btn').addEventListener('click', () => startBattle());
+  const spawnBtn = document.getElementById('spawn-btn');
+  if (spawnBtn) spawnBtn.addEventListener('click', spawnItem);
 
+  const recipeBtn = document.getElementById('recipe-btn');
+  if (recipeBtn) recipeBtn.addEventListener('click', openRecipes);
+
+  const bookBtn = document.getElementById('book-btn');
+  if (bookBtn) bookBtn.addEventListener('click', openBook);
+
+  const expandBtn = document.getElementById('expand-btn');
+  if (expandBtn) expandBtn.addEventListener('click', expandBoard);
+
+  const multiBtn = document.getElementById('multi-btn');
+  if (multiBtn) multiBtn.addEventListener('click', openMultiLobby);
+
+  const questBtn = document.getElementById('quest-btn');
+  if (questBtn) questBtn.addEventListener('click', openQuests);
+
+  const decorBtn = document.getElementById('decor-btn');
+  if (decorBtn) decorBtn.addEventListener('click', openDecor);
+
+  const resetBtnEl = document.getElementById('reset-btn');
+  if (resetBtnEl) resetBtnEl.addEventListener('click', resetGame);
+
+  const sendChatBtn = document.getElementById('send-chat');
+  if (sendChatBtn) sendChatBtn.addEventListener('click', sendChat);
+
+  const exitRoomBtn = document.getElementById('exit-room');
+  if (exitRoomBtn) exitRoomBtn.addEventListener('click', exitRoom);
+
+  const battleBtn = document.getElementById('battle-btn');
+  if (battleBtn) battleBtn.addEventListener('click', () => startBattle());
+
+  const closeBtns = document.querySelectorAll('.close-btn');
   closeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      recipeModal.classList.remove('active');
-      bookModal.classList.remove('active');
+      document.getElementById('recipe-modal').classList.remove('active');
+      document.getElementById('book-modal').classList.remove('active');
       document.getElementById('multi-modal').classList.remove('active');
       document.getElementById('quest-modal').classList.remove('active');
       document.getElementById('decor-modal').classList.remove('active');
@@ -725,11 +794,16 @@ function setupEventListeners() {
   });
 
   window.addEventListener('click', (e) => {
-    if (e.target === recipeModal) recipeModal.classList.remove('active');
-    if (e.target === bookModal) bookModal.classList.remove('active');
-    if (e.target === document.getElementById('multi-modal')) document.getElementById('multi-modal').classList.remove('active');
-    if (e.target === document.getElementById('quest-modal')) document.getElementById('quest-modal').classList.remove('active');
-    if (e.target === document.getElementById('decor-modal')) document.getElementById('decor-modal').classList.remove('active');
+    const modals = [
+      document.getElementById('recipe-modal'),
+      document.getElementById('book-modal'),
+      document.getElementById('multi-modal'),
+      document.getElementById('quest-modal'),
+      document.getElementById('decor-modal')
+    ];
+    modals.forEach(m => {
+      if (e.target === m) m.classList.remove('active');
+    });
   });
 
   // Coin ticking (passive income from items)
@@ -738,7 +812,6 @@ function setupEventListeners() {
     state.grid.forEach((item, index) => {
       if (item && item.type !== 'topping') {
         let value = item.value;
-        // Apply topping multipliers
         if (item.toppings) {
           item.toppings.forEach(t => {
             value *= t.multiplier;
@@ -746,10 +819,9 @@ function setupEventListeners() {
         }
         totalPassive += value;
 
-        // Occasionally show floating text for items
         if (Math.random() > 0.8) {
           const cell = board.children[index];
-          showFloatingText(cell, `+${Math.floor(value)} 💰`, 'gold');
+          if (cell) showFloatingText(cell, `+${Math.floor(value)} 💰`, 'gold');
         }
       }
     });
@@ -758,6 +830,7 @@ function setupEventListeners() {
       addCoins(totalPassive);
     }
   }, 3000);
+  console.log('🥖 Bakery Merge: Event Listeners Setup Complete!');
 }
 
 init();
