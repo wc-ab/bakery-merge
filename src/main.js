@@ -43,8 +43,18 @@ let state = {
     { id: 'mint', name: '민트 초코 방', color: '#f0fff0', cost: 15000, unlocked: false },
     { id: 'night', name: '세벽 빵집 (Dark)', color: '#2c3e50', cost: 50000, unlocked: false, textColor: 'white' },
   ],
-  currentBackground: 'default'
+  currentBackground: 'default',
+  tutorialSeen: false,
+  tutorialStep: 0
 };
+
+const TUTORIAL_STEPS = [
+  { title: "👋 환영합니다!", text: "안녕하세요 여긴 '베이커리 머지'입니다!" },
+  { title: "🍞 시작하기", text: "'빵굽기' 버튼을 눌러서 빵을 구우세요! 빵을 합치고 더욱 맛있고 달콤해진 빵을 만들고 돈을 버세요." },
+  { title: "🍓 토핑 더하기", text: "토핑상점에서 토핑을 사고 빵에 합치세요! 맛잇어진 빵의 위에있는 토핑을 클릭하면 다시 꺼내기 가능!" },
+  { title: "👥 멀티플레이", text: "친구와 함께 버튼을 눌러 친구와 이야기하고, 배틀하세요!" },
+  { title: "🎨 꾸미기", text: "모은 코인으로 배경을 꾸며 보세요! 즐거운 베이커리 되세요!" }
+];
 
 const EXPANSION_COSTS = {
   20: 5000,
@@ -97,11 +107,16 @@ function init() {
       state.quests = data.quests || state.quests;
       state.backgrounds = data.backgrounds || state.backgrounds;
       state.currentBackground = data.currentBackground || 'default';
+      state.tutorialSeen = data.tutorialSeen || false;
     }
 
     if (state.nickname) {
       document.getElementById('nickname-overlay').style.display = 'none';
       document.getElementById('nickname-overlay').classList.remove('active');
+
+      if (!state.tutorialSeen) {
+        showTutorial();
+      }
     }
 
     applyBackground(state.currentBackground);
@@ -505,8 +520,27 @@ function saveGame() {
     quests: state.quests,
     backgrounds: state.backgrounds,
     currentBackground: state.currentBackground,
+    tutorialSeen: state.tutorialSeen,
   };
   localStorage.setItem('bakery-merge-save', JSON.stringify(data));
+}
+
+function showTutorial() {
+  const overlay = document.getElementById('tutorial-overlay');
+  const title = document.getElementById('tutorial-title');
+  const text = document.getElementById('tutorial-text');
+
+  if (state.tutorialStep < TUTORIAL_STEPS.length) {
+    overlay.classList.add('active');
+    overlay.style.display = 'flex';
+    title.innerText = TUTORIAL_STEPS[state.tutorialStep].title;
+    text.innerText = TUTORIAL_STEPS[state.tutorialStep].text;
+  } else {
+    overlay.classList.remove('active');
+    overlay.style.display = 'none';
+    state.tutorialSeen = true;
+    saveGame();
+  }
 }
 
 function resetGame() {
@@ -745,6 +779,11 @@ function setupEventListeners() {
         document.getElementById('nickname-overlay').classList.remove('active');
         saveGame();
         console.log('🥖 Bakery Merge: Nickname saved:', nickname);
+
+        // Show tutorial right after nickname if not seen
+        if (!state.tutorialSeen) {
+          showTutorial();
+        }
       } else {
         alert('닉네임을 입력해주세요!');
       }
@@ -768,6 +807,14 @@ function setupEventListeners() {
 
   const questBtn = document.getElementById('quest-btn');
   if (questBtn) questBtn.addEventListener('click', openQuests);
+
+  const tutorialNextBtn = document.getElementById('tutorial-next');
+  if (tutorialNextBtn) {
+    tutorialNextBtn.addEventListener('click', () => {
+      state.tutorialStep++;
+      showTutorial();
+    });
+  }
 
   const decorBtn = document.getElementById('decor-btn');
   if (decorBtn) decorBtn.addEventListener('click', openDecor);
